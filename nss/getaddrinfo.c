@@ -2377,6 +2377,13 @@ getaddrinfo (const char *name, const char *service,
 
 	  gaih_service.num = -1;
 	}
+      else if ((hints->ai_family == AF_INET || hints->ai_family == AF_INET6)
+               && (hints->ai_socktype == SOCK_STREAM || hints->ai_socktype == SOCK_DGRAM)
+               && gaih_service.num > UINT16_MAX)
+        {
+	  __free_in6ai (in6ai);
+	  return EAI_SERVICE;
+        }
 
       pservice = &gaih_service;
     }
