@@ -130,6 +130,8 @@ print_resp (FILE *fp, res_state resp)
         print_option_flag (fp, &options, RES_TRUSTAD, "trust-ad");
         print_option_flag (fp, &options, RES_NOAAAA, "no-aaaa");
         print_option_flag (fp, &options, RES_STRICTERR, "strict-error");
+        print_option_flag (fp, &options, RES_IPV4, "ipv4");
+        print_option_flag (fp, &options, RES_IPV6, "ipv6");
         fputc ('\n', fp);
         if (options != 0)
           fprintf (fp, "; error: unresolved option bits: 0x%x\n", options);
