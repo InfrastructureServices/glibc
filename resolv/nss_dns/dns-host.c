@@ -379,6 +379,7 @@ _nss_dns_gethostbyname4_r (const char *name, struct gaih_addrtuple **pat,
 {
   enum nss_status status = check_name (name, herrnop);
   char tmp[NS_MAXDNAME];
+
   if (status != NSS_STATUS_SUCCESS)
     return status;
   struct resolv_context *ctx = __resolv_context_get ();
@@ -413,25 +414,43 @@ _nss_dns_gethostbyname4_r (const char *name, struct gaih_addrtuple **pat,
   int olderr = errno;
   int n;
 
-  if ((ctx->resp->options & RES_NOAAAA) == 0)
+  switch (ctx->resp->options & (RES_NOAAAA|RES_IPV4|RES_IPV6))
     {
-      n = __res_context_search (ctx, name, C_IN, T_QUERY_A_AND_AAAA,
-				dns_packet_buffer, sizeof (dns_packet_buffer),
-				&alt_dns_packet_buffer, &ans2p, &nans2p,
-				&resplen2, &ans2p_malloced);
-      if (n >= 0)
-	status = gaih_getanswer (alt_dns_packet_buffer, n, ans2p, resplen2,
-				 &abuf, pat, errnop, herrnop, ttlp);
-    }
-  else
-    {
-      n = __res_context_search (ctx, name, C_IN, T_A,
-				dns_packet_buffer, sizeof (dns_packet_buffer),
-				&alt_dns_packet_buffer, NULL, NULL, NULL, NULL);
-      if (n >= 0)
-	status = gaih_getanswer_noaaaa (alt_dns_packet_buffer, n,
-					&abuf, pat, errnop, herrnop, ttlp);
-    }
+      case RES_IPV4:
+      case RES_IPV4|RES_NOAAAA:
+      case RES_NOAAAA:
+      case RES_IPV6|RES_NOAAAA: /*< this combination should never be used. */
+      case RES_IPV4|RES_IPV6|RES_NOAAAA: /*< this does not make sense. */
+	n = __res_context_search (ctx, name, C_IN, T_A,
+				  dns_packet_buffer, sizeof (dns_packet_buffer),
+				  NULL, NULL, NULL, NULL, NULL);
+	if (n >= 0)
+	  status = gaih_getanswer_noaaaa (alt_dns_packet_buffer, n,
+					  &abuf, pat, errnop, herrnop, ttlp);
+	break;
+
+      case RES_IPV6:
+	n = __res_context_search (ctx, name, C_IN, T_AAAA,
+				  dns_packet_buffer, sizeof (dns_packet_buffer),
+				  NULL, NULL, NULL, NULL, NULL);
+	if (n >= 0) /* oh we want AAAA, but not A here. code is the same. */
+	  status = gaih_getanswer_noaaaa (alt_dns_packet_buffer, n,
+					  &abuf, pat, errnop, herrnop, ttlp);
+	break;
+
+      case 0:
+      case RES_IPV4|RES_IPV6:
+      default:
+	n = __res_context_search (ctx, name, C_IN, T_QUERY_A_AND_AAAA,
+				  dns_packet_buffer, sizeof (dns_packet_buffer),
+				  &alt_dns_packet_buffer, &ans2p, &nans2p,
+				  &resplen2, &ans2p_malloced);
+	if (n >= 0)
+	  status = gaih_getanswer (alt_dns_packet_buffer, n, ans2p, resplen2,
+				  &abuf, pat, errnop, herrnop, ttlp);
+	break;
+  }
+
   if (n < 0)
     {
       switch (errno)

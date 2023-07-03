@@ -613,6 +613,8 @@ p_option(u_long option) {
 	case RES_NORELOAD:	return "no-reload";
 	case RES_TRUSTAD:	return "trust-ad";
 	case RES_NOAAAA:	return "no-aaaa";
+	case RES_IPV4:		return "ipv4";
+	case RES_IPV6:		return "ipv6";
 				/* XXX nonreentrant */
 	default:		sprintf(nbuf, "?0x%lx?", (u_long)option);
 				return (nbuf);

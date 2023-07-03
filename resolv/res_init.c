@@ -696,6 +696,8 @@ res_setoptions (struct resolv_conf_parser *parser, const char *options)
             { STRnLEN ("trust-ad"), RES_TRUSTAD },
             { STRnLEN ("no-aaaa"), RES_NOAAAA },
             { STRnLEN ("strict-error"), RES_STRICTERR },
+            { STRnLEN ("ipv4"), RES_IPV4 },
+            { STRnLEN ("ipv6"), RES_IPV6 },
           };
 #define noptions (sizeof (options) / sizeof (options[0]))
           bool negate_option = *cp == '-';
